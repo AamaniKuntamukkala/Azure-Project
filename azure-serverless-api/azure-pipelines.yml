@@ -1,0 +1,39 @@
+# Azure DevOps Pipeline for Serverless API Deployment
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: 'Build & Scan'
+  jobs:
+  - job: Build
+    displayName: 'Build Function App'
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '6.x'
+
+    - script: |
+        # Placeholder for build steps
+        echo "Building Azure Function..."
+        # Example: dotnet build --configuration Release
+      displayName: 'Build Project'
+
+    - task: MicrosoftSecurityDevOps@1
+      displayName: 'Run Microsoft Defender for Cloud Scan'
+
+- stage: Deploy
+  displayName: 'Deploy to Staging'
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy API and Function App'
+    steps:
+    - script: |
+        # Placeholder for deployment steps
+        echo "Deploying Azure Function and APIM Configurations..."
+      displayName: 'Deploy Resources'
