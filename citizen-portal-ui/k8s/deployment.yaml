@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: citizen-portal-deployment
+  labels:
+    app: citizen-portal
+spec:
+  replicas: 2 # Run 2 pods of the application
+  selector:
+    matchLabels:
+      app: citizen-portal
+  template:
+    metadata:
+      labels:
+        app: citizen-portal
+    spec:
+      containers:
+      - name: citizen-portal
+        image: YOUR_ACR_NAME.azurecr.io/citizen-portal:latest # <-- IMPORTANT: Replace with your ACR details
+        ports:
+        - containerPort: 80

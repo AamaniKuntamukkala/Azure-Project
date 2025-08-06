@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: citizen-portal-service
+spec:
+  type: LoadBalancer # Exposes the service externally using a cloud provider's load balancer
+  selector:
+    app: citizen-portal # Selects pods with the label 'app: citizen-portal'
+  ports:
+    - protocol: TCP
+      port: 80 # The port the service is exposed on
+      targetPort: 80 # The target port on the container

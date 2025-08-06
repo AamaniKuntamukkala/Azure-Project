@@ -179,6 +179,121 @@ Now, let's set up an Azure DevOps project to build and deploy your code.
 
 Congratulations! You have successfully deployed and tested your secure serverless API.
 
+---
+
+## 6. Guide to Deploying the Portal to Azure Kubernetes Service (AKS)
+
+This guide details how to containerize the `citizen-portal-ui` application and deploy it to an AKS cluster.
+
+### Prerequisites
+
+-   **Azure CLI**: You must have the Azure CLI installed and configured.
+-   **Docker Desktop**: You need Docker running locally to build and test the container image.
+-   **kubectl**: The Kubernetes command-line tool. You can install it via Azure CLI: `az aks install-cli`
+
+--- 
+
+### Step 1: Create Azure Infrastructure for AKS
+
+1.  **Create an Azure Container Registry (ACR)**:
+    *   ACR is a private Docker registry to store your container images.
+    *   **Remember your ACR name!**
+    ```bash
+    # Use the existing Resource Group
+    az acr create --resource-group CitizenServices-RG --name <YourUniqueACRName> --sku Basic --admin-enabled true
+    ```
+
+2.  **Create an Azure Kubernetes Service (AKS) Cluster**:
+    *   This command creates a new AKS cluster and grants it permission to pull images from the ACR you just created.
+    ```bash
+    # Get the ID of your ACR
+    ACR_ID=$(az acr show --name <YourUniqueACRName> --resource-group CitizenServices-RG --query "id" --output tsv)
+
+    # Create the AKS cluster
+    az aks create \
+        --resource-group CitizenServices-RG \
+        --name CitizenServicesCluster \
+        --node-count 1 \
+        --generate-ssh-keys \
+        --attach-acr $ACR_ID
+    ```
+
+--- 
+
+### Step 2: Build and Push the Docker Image
+
+1.  **Log in to Your ACR**:
+    ```bash
+    az acr login --name <YourUniqueACRName>
+    ```
+
+2.  **Build the Docker Image**:
+    *   Navigate to the `citizen-portal-ui` directory.
+    *   The `.` at the end of the command is important.
+    ```bash
+    cd citizen-portal-ui
+    docker build -t <YourUniqueACRName>.azurecr.io/citizen-portal:latest .
+    ```
+
+3.  **Push the Image to ACR**:
+    ```bash
+    docker push <YourUniqueACRName>.azurecr.io/citizen-portal:latest
+    ```
+
+--- 
+
+### Step 3: Deploy to AKS
+
+1.  **Connect to Your AKS Cluster**:
+    *   This command configures `kubectl` to connect to your AKS cluster.
+    ```bash
+    az aks get-credentials --resource-group CitizenServices-RG --name CitizenServicesCluster
+    ```
+
+2.  **Update the Deployment Manifest**:
+    *   Open the `citizen-portal-ui/k8s/deployment.yaml` file.
+    *   Replace the `image` placeholder with the full name of the image you pushed to ACR:
+    ```yaml
+    # ...
+    spec:
+      containers:
+      - name: citizen-portal
+        image: <YourUniqueACRName>.azurecr.io/citizen-portal:latest # <-- Make sure this is correct!
+    # ...
+    ```
+
+3.  **Apply the Kubernetes Manifests**:
+    *   This command tells Kubernetes to create the resources defined in your YAML files.
+    ```bash
+    kubectl apply -f k8s/deployment.yaml
+    kubectl apply -f k8s/service.yaml
+    ```
+
+--- 
+
+### Step 4: Verify and Monitor the Deployment
+
+1.  **Check the Deployment Status**:
+    ```bash
+    # See if the pods are running
+    kubectl get pods
+    ```
+
+2.  **Get the Public IP Address**:
+    *   It might take a few minutes for the external IP to be assigned.
+    *   Run the command until you see an IP address under `EXTERNAL-IP`.
+    ```bash
+    kubectl get service citizen-portal-service --watch
+    ```
+
+3.  **Access the Portal**:
+    *   Open a web browser and navigate to the `EXTERNAL-IP` address. You should see your Citizens Portal.
+
+4.  **Monitor with Azure Monitor**:
+    *   In the Azure Portal, navigate to your AKS cluster (`CitizenServicesCluster`).
+    *   In the left menu, under **Monitoring**, click on **Insights**.
+    *   Here you can view container logs, resource utilization (CPU/Memory), and the health of your nodes and pods.
+
 -   **Secure APIs**: A set of secure and scalable APIs protected with OAuth 2.0 authentication.
 -   **Robust CI/CD**: A fully automated CI/CD pipeline with integrated security scanning.
 -   **Governance & Documentation**: Enforced governance policies and detailed, up-to-date API documentation.
