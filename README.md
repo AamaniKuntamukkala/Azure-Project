@@ -2,7 +2,31 @@
 
 This project outlines the design and implementation of secure, scalable, and compliant serverless APIs hosted on Microsoft Azure. The solution leverages a suite of Azure-native tools to expose public services while ensuring robust security and governance.
 
-## 1. Problem Statement
+## 1. Fully Automated Project Setup (Recommended)
+
+This project includes a master PowerShell script that automates the entire setup process, including creating Azure resources, configuring Azure Active Directory, and setting up the Azure DevOps pipeline. This is the recommended way to start, especially in temporary lab environments.
+
+### Prerequisites
+
+1.  **PowerShell**: You need PowerShell to run the script.
+2.  **Terraform**: Install from [https://learn.hashicorp.com/tutorials/terraform/install-cli](https://learn.hashicorp.com/tutorials/terraform/install-cli).
+3.  **Azure CLI**: Install from [https://docs.microsoft.com/en-us/cli/azure/install-azure-cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
+
+### How to Run
+
+1.  **Open PowerShell**: Open a PowerShell terminal.
+2.  **Navigate to Project Folder**: `cd` into the root directory of this project.
+3.  **Run the Script**: Execute the script by running the following command:
+    ```powershell
+    .\setup-entire-project.ps1
+    ```
+4.  **Follow the Prompts**: The script will open browser windows to let you log in to Azure and Azure DevOps. Please complete these sign-ins.
+
+After the script finishes, it will output the exact configuration values you need for your frontend application. You can then run the pipeline it created to deploy your backend code.
+
+---
+
+## 2. Problem Statement
 
 The citizen services portal requires a set of secure and scalable serverless APIs to expose public services to authenticated users. These APIs must be protected using OAuth 2.0 security via Azure Active Directory and include integrated security scanning within the CI/CD pipelines to ensure compliance and protect against vulnerabilities.
 
