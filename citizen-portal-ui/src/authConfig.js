@@ -3,7 +3,7 @@ export const msalConfig = {
     auth: {
         clientId: "8f34b583-6928-458e-a50f-116a2d1b3b2d", // Client ID of the "App Registration" in Azure AD
         authority: "https://login.microsoftonline.com/30fe8ff1-adc6-444d-ba94-1238894df42c", // Tenant ID of your Azure AD
-        redirectUri: "http://localhost:3000" // Must match the redirect URI in your App Registration
+
     },
     cache: {
         cacheLocation: "sessionStorage", 
