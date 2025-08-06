@@ -3,37 +3,70 @@
 trigger:
 - main
 
-pool:
-  vmImage: 'ubuntu-latest'
+variables:
+  # Agent VM image name
+  vmImageName: 'windows-latest'
+
+  # Function app name - **REPLACE WITH YOUR FUNCTION APP NAME**
+  functionAppName: 'YourFunctionAppName'
+
+  # Azure subscription (Service Connection) - **REPLACE WITH YOUR SERVICE CONNECTION NAME**
+  azureSubscription: 'YourAzureServiceConnection'
+
+  # Working directory for the function code
+  workingDirectory: '$(System.DefaultWorkingDirectory)/azure-serverless-api/functions'
 
 stages:
 - stage: Build
-  displayName: 'Build & Scan'
+  displayName: 'Build and Package'
   jobs:
   - job: Build
-    displayName: 'Build Function App'
+    displayName: 'Build and package the Function App'
+    pool:
+      vmImage: $(vmImageName)
     steps:
     - task: UseDotNet@2
+      displayName: 'Use .NET 6.0'
       inputs:
         packageType: 'sdk'
-        version: '6.x'
+        version: '6.0.x'
 
-    - script: |
-        # Placeholder for build steps
-        echo "Building Azure Function..."
-        # Example: dotnet build --configuration Release
-      displayName: 'Build Project'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build the project'
+      inputs:
+        command: 'build'
+        projects: '$(workingDirectory)/*.csproj'
+        arguments: '--configuration Release'
 
-    - task: MicrosoftSecurityDevOps@1
-      displayName: 'Run Microsoft Defender for Cloud Scan'
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish the project'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: '$(workingDirectory)/*.csproj'
+        arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
 
 - stage: Deploy
-  displayName: 'Deploy to Staging'
+  displayName: 'Deploy to Azure'
+  dependsOn: Build
+  condition: succeeded()
   jobs:
   - job: Deploy
-    displayName: 'Deploy API and Function App'
+    displayName: 'Deploy Function App'
+    pool:
+      vmImage: $(vmImageName)
     steps:
-    - script: |
-        # Placeholder for deployment steps
-        echo "Deploying Azure Function and APIM Configurations..."
-      displayName: 'Deploy Resources'
+    - task: AzureFunctionApp@1
+      displayName: 'Deploy Azure Function App'
+      inputs:
+        azureSubscription: '$(azureSubscription)'
+        appType: 'functionApp'
+        appName: '$(functionAppName)'
+        package: '$(Pipeline.Workspace)/drop/**/*.zip'
