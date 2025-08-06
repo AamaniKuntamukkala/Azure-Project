@@ -82,6 +82,103 @@ graph TD
 
 ## 4. Expected Output
 
+## 5. Step-by-Step Implementation Guide
+
+This guide will walk you through deploying the serverless API using the code in this repository.
+
+### Prerequisites
+
+1.  **Azure Account**: You need an active Azure subscription.
+2.  **Azure DevOps Organization**: A free Azure DevOps organization linked to your Azure AD.
+3.  **GitHub Repository**: The code pushed to your GitHub repository (which you have already done).
+
+--- 
+
+### Step 1: Create Azure Resources
+
+First, we need to create the necessary resources in the Azure Portal.
+
+1.  **Create a Resource Group**:
+    *   In the [Azure Portal](https://portal.azure.com), search for `Resource groups` and click **Create**.
+    *   Give it a name (e.g., `CitizenServices-RG`) and choose a region. Click **Review + create**.
+
+2.  **Create a Function App**:
+    *   Search for `Function App` and click **Create**.
+    *   **Subscription**: Your Azure subscription.
+    *   **Resource Group**: Select the one you just created (`CitizenServices-RG`).
+    *   **Function App name**: Choose a globally unique name (e.g., `citizenservices-api-func`). **Remember this name!**
+    *   **Publish**: Code.
+    *   **Runtime stack**: `.NET`.
+    *   **Version**: `6`.
+    *   **Region**: The same region as your resource group.
+    *   Click **Review + create** and then **Create**.
+
+--- 
+
+### Step 2: Set Up Azure DevOps
+
+Now, let's set up an Azure DevOps project to build and deploy your code.
+
+1.  **Create a New Project**:
+    *   Go to your Azure DevOps organization (`dev.azure.com/{your_org}`).
+    *   Create a **New project** and give it a name.
+
+2.  **Create a Service Connection**:
+    *   Inside your new project, go to **Project settings** (bottom-left corner) > **Service connections**.
+    *   Click **New service connection**, select **Azure Resource Manager**, and choose **Service principal (automatic)**.
+    *   Follow the prompts to authorize it for your Azure subscription. Give the connection a name (e.g., `Azure-Subscription-Connection`). **Remember this name!**
+
+3.  **Create the Pipeline**:
+    *   Go to **Pipelines** in the left menu and click **Create Pipeline**.
+    *   Select **GitHub** as the location of your code.
+    *   Select your repository.
+    *   On the **Configure** step, choose **Existing Azure Pipelines YAML file**.
+    *   Select the `azure-serverless-api/azure-pipelines.yml` file from the dropdown.
+    *   **DO NOT RUN IT YET.** Click the dropdown arrow next to **Run** and select **Save**.
+
+--- 
+
+### Step 3: Configure and Run the Pipeline
+
+1.  **Update Pipeline Variables**:
+    *   In your local code editor, open the `azure-serverless-api/azure-pipelines.yml` file.
+    *   Update the following variables with the names you chose in the previous steps:
+        ```yaml
+        variables:
+          # ...
+          functionAppName: 'citizenservices-api-func' # The name of the Function App you created
+          azureSubscription: 'Azure-Subscription-Connection' # The name of your Service Connection
+          # ...
+        ```
+
+2.  **Commit and Push the Changes**:
+    *   Save the file, then commit and push it to your `main` branch on GitHub.
+    ```bash
+    git add azure-serverless-api/azure-pipelines.yml
+    git commit -m "Configure pipeline variables"
+    git push origin main
+    ```
+
+3.  **Monitor the Pipeline**:
+    *   Pushing the change will automatically trigger the pipeline in Azure DevOps.
+    *   Go to the **Pipelines** section in Azure DevOps, click on your pipeline, and watch the run. It will first run the **Build** stage and then the **Deploy** stage. Wait for it to complete successfully.
+
+--- 
+
+### Step 4: Test Your Deployed API
+
+1.  **Get the Function URL**:
+    *   In the [Azure Portal](https://portal.azure.com), navigate to the Function App you created.
+    *   In the left menu, click on **Functions**, and you should see `GetCitizenData`.
+    *   Click on `GetCitizenData`, then click **Get Function Url**.
+    *   Copy the URL. It will look something like this: `https://citizenservices-api-func.azurewebsites.net/api/GetCitizenData?code=...`
+
+2.  **Test in Browser or Postman**:
+    *   Paste the URL into your web browser and press Enter.
+    *   You should see the message: `Response from GetCitizenData function.`
+
+Congratulations! You have successfully deployed and tested your secure serverless API.
+
 -   **Secure APIs**: A set of secure and scalable APIs protected with OAuth 2.0 authentication.
 -   **Robust CI/CD**: A fully automated CI/CD pipeline with integrated security scanning.
 -   **Governance & Documentation**: Enforced governance policies and detailed, up-to-date API documentation.
