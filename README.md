@@ -82,7 +82,49 @@ graph TD
 
 ## 4. Expected Output
 
-## 5. Detailed Guide Part A: Deploying the Backend API
+## 5. Automated Backend Deployment with Terraform (Recommended)
+
+This is the recommended method for deploying the backend infrastructure. It uses Terraform to create all required Azure resources automatically, avoiding manual errors and policy issues.
+
+### Prerequisites
+
+1.  **Install Terraform**: Follow the official guide at [https://learn.hashicorp.com/tutorials/terraform/install-cli](https://learn.hashicorp.com/tutorials/terraform/install-cli).
+2.  **Install Azure CLI and Log In**: You need the Azure CLI installed. Log in by running `az login` in your terminal.
+
+### Step-by-Step Guide
+
+All commands should be run from the `terraform-backend` directory.
+
+**1. Navigate to the Terraform Directory**
+```bash
+cd terraform-backend
+```
+
+**2. Initialize Terraform**
+This command downloads the necessary Azure provider plugins.
+```bash
+terraform init
+```
+
+**3. Plan the Deployment**
+This command shows you what resources Terraform will create. It's a dry run to verify everything is correct.
+```bash
+terraform plan
+```
+
+**4. Apply the Deployment**
+This is the command that actually creates the resources in Azure. It will ask for your confirmation before proceeding.
+```bash
+terraform apply
+```
+
+When it asks for confirmation, type `yes` and press Enter. Terraform will now build your Resource Group, Storage Account, App Service Plan, and Function App with the correct settings.
+
+After this is complete, you can proceed directly to **Section 6.2: Create the Pipeline** to set up the CI/CD for your newly created Function App.
+
+---
+
+## 6. Manual Guide Part A: Deploying the Backend API
 
 This guide provides a detailed walkthrough for deploying the serverless backend API to Azure.
 
