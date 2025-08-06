@@ -82,112 +82,129 @@ graph TD
 
 ## 4. Expected Output
 
-## 5. Step-by-Step Implementation Guide
+## 5. Detailed Guide Part A: Deploying the Backend API
 
-This guide will walk you through deploying the serverless API using the code in this repository.
+This guide provides a detailed walkthrough for deploying the serverless backend API to Azure.
 
 ### Prerequisites
-
-1.  **Azure Account**: You need an active Azure subscription.
-2.  **Azure DevOps Organization**: A free Azure DevOps organization linked to your Azure AD.
-3.  **GitHub Repository**: The code pushed to your GitHub repository (which you have already done).
+- An active Azure subscription.
+- An Azure DevOps organization.
 
 --- 
 
-### Step 1: Create Azure Resources
+### Step 1: Create Core Azure Resources
 
-First, we need to create the necessary resources in the Azure Portal.
+**1.1. Navigate to the Azure Portal**
+- Open your web browser and go to [https://portal.azure.com](https://portal.azure.com).
+- Log in with your Azure account credentials.
 
-1.  **Create a Resource Group**:
-    *   In the [Azure Portal](https://portal.azure.com), search for `Resource groups` and click **Create**.
-    *   Give it a name (e.g., `CitizenServices-RG`) and choose a region. Click **Review + create**.
+**1.2. Create a Resource Group**
+- A Resource Group is a container that holds related resources for an Azure solution.
+- In the main search bar at the top of the portal, type `Resource groups` and select it from the services list.
+- On the **Resource groups** page, click the **+ Create** button.
+- **Subscription**: Select your Azure subscription.
+- **Resource group**: Type a unique name, for example, `CitizenServices-RG`.
+- **Region**: Choose a location close to you, for example, `(US) East US`.
+- Click **Review + create**, and after validation passes, click **Create**.
 
-2.  **Create a Function App**:
-    *   Search for `Function App` and click **Create**.
-    *   **Subscription**: Your Azure subscription.
-    *   **Resource Group**: Select the one you just created (`CitizenServices-RG`).
-    *   **Function App name**: Choose a globally unique name (e.g., `citizenservices-api-func`). **Remember this name!**
-    *   **Publish**: Code.
-    *   **Runtime stack**: `.NET`.
-    *   **Version**: `6`.
-    *   **Region**: The same region as your resource group.
-    *   Click **Review + create** and then **Create**.
+**1.3. Create the Function App**
+- This is the serverless resource that will host and run our backend API code.
+- In the main search bar, type `Function App` and select it.
+- On the **Function App** page, click **+ Create**.
+- In the **Basics** tab:
+    - **Subscription**: Ensure your subscription is selected.
+    - **Resource Group**: Select the `CitizenServices-RG` group you just created.
+    - **Function App name**: Enter a globally unique name, for example, `citizenservices-api-aamani`. **You must remember this name.**
+    - **Publish**: Select `Code`.
+    - **Runtime stack**: Select `.NET`.
+    - **Version**: Select `6`.
+    - **Region**: Select the same region you used for the resource group.
+- Click **Review + create**, and then **Create**. Wait for the deployment to complete.
 
 --- 
 
-### Step 2: Set Up Azure DevOps
+### Step 2: Set Up Azure DevOps for CI/CD
 
-Now, let's set up an Azure DevOps project to build and deploy your code.
+**2.1. Create a New DevOps Project**
+- Navigate to your Azure DevOps organization: [https://dev.azure.com/{your_organization_name}](https://dev.azure.com/{your_organization_name})
+- Click the **+ New project** button.
+- **Project name**: Give it a name, like `CitizenServicesPortal`.
+- **Visibility**: Keep it `Private`.
+- Click **Create**.
 
-1.  **Create a New Project**:
-    *   Go to your Azure DevOps organization (`dev.azure.com/{your_org}`).
-    *   Create a **New project** and give it a name.
+**2.2. Create the Pipeline**
+- This pipeline will automatically build and deploy your code from GitHub to your Function App.
+- In your new project, navigate to **Pipelines** on the left menu.
+- Click **Create Pipeline**.
+- On the **"Where is your code?"** screen, select **GitHub**.
+- You may need to authorize Azure Pipelines to access your GitHub account. Select your repository containing this project.
+- On the **"Configure your pipeline"** screen, select **Existing Azure Pipelines YAML file**.
+- In the **Path** dropdown, select the file: `/azure-serverless-api/azure-pipelines.yml`.
+- Click **Continue**.
+- You will see a review of the YAML file. **DO NOT RUN IT YET.** Click the dropdown arrow next to the **Run** button and select **Save**.
 
-2.  **Create a Service Connection**:
-    *   Inside your new project, go to **Project settings** (bottom-left corner) > **Service connections**.
-    *   Click **New service connection**, select **Azure Resource Manager**, and choose **Service principal (automatic)**.
-    *   Follow the prompts to authorize it for your Azure subscription. Give the connection a name (e.g., `Azure-Subscription-Connection`). **Remember this name!**
-
-3.  **Create the Pipeline**:
-    *   Go to **Pipelines** in the left menu and click **Create Pipeline**.
-    *   Select **GitHub** as the location of your code.
-    *   Select your repository.
-    *   On the **Configure** step, choose **Existing Azure Pipelines YAML file**.
-    *   Select the `azure-serverless-api/azure-pipelines.yml` file from the dropdown.
-    *   **DO NOT RUN IT YET.** Click the dropdown arrow next to **Run** and select **Save**.
+**2.3. Create a Service Connection**
+- This creates a secure connection between Azure DevOps and your Azure subscription.
+- In the bottom-left corner of your DevOps project, click **Project settings**.
+- Under the **Pipelines** section, click **Service connections**.
+- Click **Create service connection**.
+- Select **Azure Resource Manager**, then click **Next**.
+- Select **Service principal (automatic)**, then click **Next**.
+- **Subscription**: Select the Azure subscription where you created your resources.
+- **Resource Group**: Select `CitizenServices-RG`.
+- **Service connection name**: Give it a memorable name, like `Azure-Subscription-Connection`. **You must remember this name.**
+- Check the box for **Grant access permission to all pipelines**.
+- Click **Save**.
 
 --- 
 
 ### Step 3: Configure and Run the Pipeline
 
-1.  **Update Pipeline Variables**:
-    *   In your local code editor, open the `azure-serverless-api/azure-pipelines.yml` file.
-    *   Update the following variables with the names you chose in the previous steps:
-        ```yaml
-        variables:
-          # ...
-          functionAppName: 'citizenservices-api-func' # The name of the Function App you created
-          azureSubscription: 'Azure-Subscription-Connection' # The name of your Service Connection
-          # ...
-        ```
+**3.1. Update Pipeline Variables in Your Code**
+- In your local code editor (like VS Code), open the file `azure-serverless-api/azure-pipelines.yml`.
+- Find the `variables` section and replace the placeholder values:
+    - `functionAppName`: Replace `'YourFunctionAppName'` with the unique name you gave your Function App (e.g., `'citizenservices-api-aamani'`).
+    - `azureSubscription`: Replace `'YourAzureServiceConnection'` with the name you gave your Service Connection (e.g., `'Azure-Subscription-Connection'`).
 
-2.  **Commit and Push the Changes**:
-    *   Save the file, then commit and push it to your `main` branch on GitHub.
-    ```bash
-    git add azure-serverless-api/azure-pipelines.yml
-    git commit -m "Configure pipeline variables"
-    git push origin main
-    ```
+**3.2. Commit and Push the Changes to GitHub**
+- Save the changes to the file.
+- Use Git to commit and push the updated file. This push will trigger your pipeline.
+```bash
+git add azure-serverless-api/azure-pipelines.yml
+git commit -m "Configure pipeline variables for deployment"
+git push
+```
 
-3.  **Monitor the Pipeline**:
-    *   Pushing the change will automatically trigger the pipeline in Azure DevOps.
-    *   Go to the **Pipelines** section in Azure DevOps, click on your pipeline, and watch the run. It will first run the **Build** stage and then the **Deploy** stage. Wait for it to complete successfully.
+**3.3. Monitor the Pipeline Run**
+- Go back to the **Pipelines** section in Azure DevOps.
+- You will see your pipeline is now running. Click on it to watch the progress of the **Build** and **Deploy** stages. Wait for both to complete with a green checkmark.
 
 --- 
 
-### Step 4: Test Your Deployed API
+### Step 4: Test the Deployed Backend API
 
-1.  **Get the Function URL**:
-    *   In the [Azure Portal](https://portal.azure.com), navigate to the Function App you created.
-    *   In the left menu, click on **Functions**, and you should see `GetCitizenData`.
-    *   Click on `GetCitizenData`, then click **Get Function Url**.
-    *   Copy the URL. It will look something like this: `https://citizenservices-api-func.azurewebsites.net/api/GetCitizenData?code=...`
+**4.1. Get the Function URL**
+- Go back to the [Azure Portal](https://portal.azure.com).
+- In the search bar, find and navigate to your Function App (`citizenservices-api-aamani`).
+- On the left menu of the Function App, click **Functions**.
+- You will see a function named `GetCitizenData` in the list. Click on it.
+- In the `GetCitizenData` function overview, click **Get Function Url** at the top.
+- Click the **Copy** icon to copy the full URL to your clipboard.
 
-2.  **Test in Browser or Postman**:
-    *   Paste the URL into your web browser and press Enter.
-    *   You should see the message: `Response from GetCitizenData function.`
+**4.2. Test in a Browser**
+- Open a new tab in your web browser.
+- Paste the copied URL into the address bar and press Enter.
+- You should see the text: `Response from GetCitizenData function.`
 
-Congratulations! You have successfully deployed and tested your secure serverless API.
+**Congratulations! You have successfully deployed the secure, scalable, serverless backend API.**
 
----
+## 6. Detailed Guide Part B: Deploying the Frontend Portal to AKS
 
-## 6. Guide to Deploying the Portal to Azure Kubernetes Service (AKS)
-
-This guide details how to containerize the `citizen-portal-ui` application and deploy it to an AKS cluster.
+This guide details how to containerize the `citizen-portal-ui` application and deploy it to an Azure Kubernetes Service (AKS) cluster.
 
 ### Prerequisites
 
--   **Azure CLI**: You must have the Azure CLI installed and configured.
+-   **Azure CLI**: You must have the Azure CLI installed and configured (`az login`).
 -   **Docker Desktop**: You need Docker running locally to build and test the container image.
 -   **kubectl**: The Kubernetes command-line tool. You can install it via Azure CLI: `az aks install-cli`
 
