@@ -15,18 +15,14 @@ provider "azurerm" {
 
 # Create a Resource Group
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
+  name     = "kml_rg_main-13d212c7edd04114"
   location = var.location
-}
-
-variable "resource_group_name" {
-  default = "kml_rg_main-13d212c7edd04114"
 }
 
 # Create a Storage Account required by the Function App
 resource "azurerm_storage_account" "storage" {
   name                     = "${var.project_prefix}storage"
-  resource_group_name      = var.resource_group_name
+  resource_group_name = "kml_rg_main-13d212c7edd04114"
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -35,7 +31,7 @@ resource "azurerm_storage_account" "storage" {
 # Create an F1 (Free) App Service Plan that complies with policy
 resource "azurerm_service_plan" "plan" {
   name                = "${var.project_prefix}-asp"
-  resource_group_name = "kml_rg_main-13d212c7edd04114"azurerm_resource_group.rg.name
+  resource_group_name = "kml_rg_main-13d212c7edd04114"
   location            = azurerm_resource_group.rg.location
   os_type             = "Windows"
   sku_name            = "F1" # Free tier to comply with policy
@@ -44,7 +40,7 @@ resource "azurerm_service_plan" "plan" {
 # Create the Windows Function App
 resource "azurerm_windows_function_app" "func" {
   name                = var.function_app_name
-  resource_group_name = "kml_rg_main-13d212c7edd04114"azurerm_resource_group.rg.name
+  resource_group_name = "kml_rg_main-13d212c7edd04114"
   location            = azurerm_resource_group.rg.location
 
   storage_account_name       = azurerm_storage_account.storage.name
