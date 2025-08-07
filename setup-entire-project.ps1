@@ -50,8 +50,11 @@ $apiAppObjectId = $apiApp.id
 
 # Expose an API scope for the backend
 $permissionScopeId = (New-Guid).Guid
-# Update the API App Registration with the required permission scope using --set
-az ad app update --id $apiAppId --set oauth2PermissionScopes="[{`"adminConsentDescription`":`"Allow the application to access the API on behalf of the signed-in user.`",`"adminConsentDisplayName`":`"Access API`",`"id`":`"$permissionScopeId`",`"isEnabled`":true,`"type`":`"User`",`"userConsentDescription`":`"Allow the application to access the API on your behalf.`",`"userConsentDisplayName`":`"Access API`",`"value`":`"api.access`"}]"
+# MANUAL STEP REQUIRED:
+# The Azure CLI does not support updating oauth2PermissionScopes via --set for existing apps.
+# Please update the API App Registration's manifest to add the permission scope manually or via script as described in the README or ask for manifest automation help.
+# az ad app update --id $apiAppId --set oauth2PermissionScopes=... (NOT SUPPORTED, DO NOT USE)
+
 $apiIdentifierUri = "api://$apiAppId"
 az ad app update --id $apiAppId --identifier-uris $apiIdentifierUri
 
@@ -64,8 +67,11 @@ $uiApp = az ad app create --display-name $uiAppName --sign-in-audience AzureADMy
 $uiAppId = $uiApp.appId
 
 # Configure SPA redirect URIs
-# Update the UI App Registration with the SPA redirect URI using --set
-az ad app update --id $uiAppId --set spa.redirectUris="['http://localhost:3000']"
+# MANUAL STEP REQUIRED:
+# The Azure CLI does not support updating SPA redirect URIs via --set for existing apps.
+# Please update the UI App Registration's manifest to add the SPA redirect URI manually or via script as described in the README or ask for manifest automation help.
+# az ad app update --id $uiAppId --set spa.redirectUris=... (NOT SUPPORTED, DO NOT USE)
+
 
 Write-Host "Frontend UI App ('$uiAppName') created with ID: $uiAppId"
 
