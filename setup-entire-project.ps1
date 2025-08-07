@@ -81,7 +81,7 @@ $apiPermission = az ad app permission add --id $uiAppId --api $apiAppId --api-pe
 
 # --- Step 4: Setup Azure DevOps ---
 Write-Host "`nStep 4: Setting up Azure DevOps Project and Pipeline..." -ForegroundColor Green
-$devopsProjectName = "CitizenServicesPortal-Auto"
+$devopsProjectName = "kml_rg_main-13d212c7edd04114Portal-Auto"
 $githubRepoUrl = "https://github.com/AamaniKuntamukkala/Azure-Project" # Replace if your repo URL is different
 
 # Create DevOps Project
