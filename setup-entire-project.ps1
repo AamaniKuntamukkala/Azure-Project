@@ -50,7 +50,8 @@ $apiAppObjectId = $apiApp.id
 
 # Expose an API scope for the backend
 $permissionScopeId = (New-Guid).Guid
-az ad app update --id $apiAppId --api "{\"oauth2PermissionScopes\":[{\"adminConsentDescription\":\"Allow the application to access the API on behalf of the signed-in user.\",\"adminConsentDisplayName\":\"Access API\",\"id\":\"$permissionScopeId\",\"isEnabled\":true,\"type\":\"User\",\"userConsentDescription\":\"Allow the application to access the API on your behalf.\",\"userConsentDisplayName\":\"Access API\",\"value\":\"api.access\"}]}"
+# Update the API App Registration with the required permission scope using --set
+az ad app update --id $apiAppId --set oauth2PermissionScopes="[{`"adminConsentDescription`":`"Allow the application to access the API on behalf of the signed-in user.`",`"adminConsentDisplayName`":`"Access API`",`"id`":`"$permissionScopeId`",`"isEnabled`":true,`"type`":`"User`",`"userConsentDescription`":`"Allow the application to access the API on your behalf.`",`"userConsentDisplayName`":`"Access API`",`"value`":`"api.access`"}]"
 $apiIdentifierUri = "api://$apiAppId"
 az ad app update --id $apiAppId --identifier-uris $apiIdentifierUri
 
@@ -63,7 +64,8 @@ $uiApp = az ad app create --display-name $uiAppName --sign-in-audience AzureADMy
 $uiAppId = $uiApp.appId
 
 # Configure SPA redirect URIs
-az ad app update --id $uiAppId --spa "{\"redirectUris\":[\"http://localhost:3000\"]}"
+# Update the UI App Registration with the SPA redirect URI using --set
+az ad app update --id $uiAppId --set spa.redirectUris="['http://localhost:3000']"
 
 Write-Host "Frontend UI App ('$uiAppName') created with ID: $uiAppId"
 
@@ -77,6 +79,10 @@ $devopsProjectName = "CitizenServicesPortal-Auto"
 $githubRepoUrl = "https://github.com/AamaniKuntamukkala/Azure-Project" # Replace if your repo URL is different
 
 # Create DevOps Project
+if (-not $devopsOrgUrl) {
+    Write-Host "ERROR: Could not determine Azure DevOps organization URL. Please check your login and try again." -ForegroundColor Red
+    exit 1
+}
 az devops project create --name $devopsProjectName --organization $devopsOrgUrl
 
 # Create Service Connection
@@ -84,11 +90,18 @@ $serviceConnectionName = "Azure-Subscription-Connection-Auto"
 $servicePrincipalName = "http://${devopsProjectName}-SPN"
 $spn = az ad sp create-for-rbac --name $servicePrincipalName --role "Contributor" --scopes "/subscriptions/$subscriptionId" --output json | ConvertFrom-Json
 
+if (-not $spn.appId) {
+    Write-Host "ERROR: Service Principal creation failed. You may lack sufficient permissions to assign roles. Contact your Azure admin." -ForegroundColor Red
+    exit 1
+}
 az devops service-endpoint azurerm create --azure-rm-service-principal-id $spn.appId --azure-rm-subscription-id $subscriptionId --azure-rm-subscription-name $spn.displayName --azure-rm-tenant-id $spn.tenant --name $serviceConnectionName --project $devopsProjectName --organization $devopsOrgUrl
 
 # Create the Pipeline from the repo's YAML file
 $pipelineName = "Deploy-Backend-API"
 az devops pipeline create --name $pipelineName --project $devopsProjectName --organization $devopsOrgUrl --repository $githubRepoUrl --branch main --yml-path "/azure-serverless-api/azure-pipelines.yml"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "WARNING: Pipeline creation failed. Please check the Azure DevOps portal and create the pipeline manually if needed." -ForegroundColor Yellow
+}
 
 Write-Host "Azure DevOps setup is complete."
 
