@@ -27,9 +27,6 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       # Build the project (requires a .csproj inside the path above)
-      - name: Build project
-        run: dotnet build ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/*.csproj --configuration Release --output ./output
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -43,3 +40,4 @@ jobs:
           app-name: 'citizenservices-api-aamani'
           slot-name: 'Production'
           package: './output'
+
