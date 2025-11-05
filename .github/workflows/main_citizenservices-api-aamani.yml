@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy dotnet core app to Azure Function App - citizenservices-api-aamani
+name: Build and deploy .NET Azure Function App - citizenservices-api-aamani
 
 on:
   push:
@@ -10,32 +7,29 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'azure-serverless-api/functions' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'azure-serverless-api/functions' # folder containing your .csproj
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   build-and-deploy:
     runs-on: windows-latest
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: 'Checkout GitHub Action'
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: pwsh
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
-      
+      # Build the project (requires a .csproj inside the path above)
+      - name: Build project
+        run: dotnet build ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/*.csproj --configuration Release --output ./output
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -43,14 +37,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4434A5D6A5BF41D9A6EEC04BBC3D01B1 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C01ED680F5A3415697410519ABA96BFB }}
 
-      - name: 'Run Azure Functions Action'
+      - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
-        id: fa
         with:
           app-name: 'citizenservices-api-aamani'
           slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-
-          
-
-
+          package: './output'
